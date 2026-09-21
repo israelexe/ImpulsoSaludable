@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Primera versión // Impulso Saludable</title>
+    <style>
+      :root {
+        --neon: #7dff19;
+        --acid: #d7ff00;
+        --red: #ff1238;
+        --dark: #020602;
+        --panel: #061706;
+        --muted: #65a866;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--dark);
+        color: var(--neon);
+        font:
+          12px Consolas,
+          monospace;
+      }
+      .app {
+        width: min(1150px, calc(100% - 28px));
+        margin: auto;
+      }
+      header {
+        height: 72px;
+        border-bottom: 1px solid #7dff1955;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        letter-spacing: 2px;
+      }
+      .brand {
+        font-weight: bold;
+      }
+      .brand b {
+        color: var(--red);
+        font-size: 20px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .intro {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        padding: 40px 0 24px;
+      }
+      .intro h1 {
+        margin: 0;
+        color: var(--acid);
+        font:
+          50px/0.9 Impact,
+          Arial Black,
+          sans-serif;
+      }
+      .intro em {
+        color: var(--red);
+        font-style: normal;
+      }
+      .note {
+        text-align: right;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+      .monitor {
+        background: var(--panel);
+        border: 1px solid #7dff1966;
+        box-shadow: 0 0 45px #7dff1922;
+        padding: 12px 12px 0;
+      }
+      .hud {
+        height: 42px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+      }
+      .hud small {
+        font-size: 9px;
+        color: var(--muted);
+      }
+      .hud strong {
+        color: var(--acid);
+      }
+      .stage {
+        height: min(55vw, 500px);
+        min-height: 320px;
+        position: relative;
+        border: 1px solid #7dff1955;
+        overflow: hidden;
+      }
+      .stage canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .panel {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        background: #020602e8;
+      }
+      .panel.hidden {
+        display: none;
+      }
+      .panel h2 {
+        margin: 10px;
+        color: var(--acid);
+        font:
+          46px Impact,
+          Arial Black,
+          sans-serif;
+        text-shadow: 0 0 20px var(--neon);
+      }
+      .panel p {
+        max-width: 420px;
+        color: #c1f4b5;
+        line-height: 1.6;
+      }
+      .panel button,
+      .controls button {
+        border: 1px solid var(--acid);
+        background: #031003;
+        color: var(--acid);
+        padding: 13px 16px;
+        font:
+          bold 10px Consolas,
+          monospace;
+        cursor: pointer;
+        touch-action: none;
+      }
+      .panel button:hover,
+      .controls button:hover {
+        background: var(--red);
+        color: #fff;
+      }
+      .panel small {
+        color: var(--muted);
+        margin-top: 15px;
+      }
+      .controls {
+        position: absolute;
+        z-index: 4;
+        right: 12px;
+        bottom: 12px;
+        display: flex;
+        gap: 8px;
+      }
+      .controls button:first-child {
+        border-color: var(--neon);
+      }
+      .progress {
+        height: 5px;
+        margin: 12px -12px 0;
+        background: #123412;
+      }
+      .progress div {
+        height: 100%;
+        width: 0;
+        background: var(--neon);
+        box-shadow: 0 0 12px var(--neon);
+      }
+      footer {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px 0;
+        color: var(--muted);
+        font-size: 9px;
+        letter-spacing: 1px;
+      }
+      @media (max-width: 650px) {
+        .app {
+          width: calc(100% - 16px);
+        }
+        .muted {
+          display: none;
+        }
+        .intro h1 {
+          font-size: 39px;
+        }
+        .note {
+          font-size: 9px;
+        }
+        .hud {
+          gap: 6px;
+        }
+        .hud strong {
+          font-size: 10px;
+        }
+        .stage {
+          height: 108vw;
+          min-height: 320px;
+        }
+        footer span:nth-child(2) {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <div class="brand"><b>◆</b> IMPULSO SALUDABLE</div>
+        <div class="muted">PRIMERA VERSION // WAVE MONITOR</div>
+      </header>
+      <section class="intro">
+        <div>
+          <div>SISTEMA DE BIENESTAR</div>
+          <h1>CONTROL.<br /><em>RESPIRA.</em></h1>
+        </div>
+        <div class="note">Una decisión saludable<br />a la vez.</div>
+      </section>
+      <section class="monitor">
+        <div class="hud">
+          <div>PUNTOS <strong id="score">0000</strong></div>
+          <div>HABITO <strong id="habit">Hidratación</strong></div>
+          <div>VELOCIDAD <strong id="speed">270</strong></div>
+          <div>RECORD <strong id="best">0000</strong></div>
+        </div>
+        <div class="stage">
+          <canvas id="game"></canvas>
+          <div class="panel" id="panel">
+            <div>SENAL ESTABLE // NAVE ROJA</div>
+            <h2 id="title">¿LISTO?</h2>
+            <p id="message">
+              Mantén el botón de subida para volar. Suéltalo para bajar. Dispara
+              a los asteroides.
+            </p>
+            <button id="start">COMENZAR</button
+            ><small
+              >SUBIR: MANTENER ESPACIO / W / ↑ · DISPARAR: X / F / ENTER</small
+            >
+          </div>
+          <div class="controls">
+            <button id="up">▲ MANTENER</button
+            ><button id="shoot">● DISPARAR</button>
+          </div>
+        </div>
+        <div class="progress"><div id="bar"></div></div>
+      </section>
+      <footer>
+        <span>ACTIVATE</span><span>HIDRATATE · DESCANSA · MUEVETE</span
+        ><span>PARA TODAS LAS EDADES</span>
+      </footer>
+    </main>
+    <script>
+      (() => {
+        const canvas = document.querySelector("#game"),
+          ctx = canvas.getContext("2d"),
+          panel = document.querySelector("#panel"),
+          start = document.querySelector("#start"),
+          upButton = document.querySelector("#up"),
+          shootButton = document.querySelector("#shoot"),
+          scoreEl = document.querySelector("#score"),
+          habitEl = document.querySelector("#habit"),
+          speedEl = document.querySelector("#speed"),
+          bestEl = document.querySelector("#best"),
+          bar = document.querySelector("#bar"),
+          title = document.querySelector("#title"),
+          message = document.querySelector("#message");
+        const ship = { x: 145, y: 0, r: 15, holding: false, direction: 1 };
+        const game = {
+          mode: "ready",
+          distance: 0,
+          score: 0,
+          speed: 270,
+          last: 0,
+          rockTimer: 0.2,
+          gateTimer: 1,
+          rocks: [],
+          gates: [],
+          shots: [],
+          particles: [],
+          trail: [],
+          best: Number(localStorage.getItem("impulso-first-best") || 0),
+          death: 0,
+          boom: 0.7,
+        };
+        const tips = [
+          "Toma agua durante el día, especialmente durante la actividad física.",
+          "Haz pausas activas y mueve tu cuerpo con frecuencia.",
+          "Dormir bien ayuda a recuperar energía y concentrarte.",
+          "Combina alimentos variados e incluye frutas y verduras.",
+          "Respira profundo y busca apoyo cuando lo necesites.",
+        ];
+        const top = () => 24,
+          bottom = () => canvas.clientHeight - 24;
+        function resize() {
+          const ratio = Math.min(devicePixelRatio || 1, 2);
+          canvas.width = canvas.clientWidth * ratio;
+          canvas.height = canvas.clientHeight * ratio;
+          ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+          if (game.mode === "ready") ship.y = canvas.clientHeight / 2;
+          draw();
+        }
+        function burst(x, y, color, count) {
+          for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const force = 45 + Math.random() * 190;
+            game.particles.push({
+              x,
+              y,
+              vx: Math.cos(angle) * force,
+              vy: Math.sin(angle) * force,
+              life: 0.3 + Math.random() * 0.6,
+              color,
+            });
+          }
+        }
+        function reset() {
+          game.mode = "run";
+          game.distance = 0;
+          game.score = 0;
+          game.speed = 270;
+          game.rockTimer = 0.1;
+          game.gateTimer = 1;
+          game.rocks = [];
+          game.gates = [];
+          game.shots = [];
+          game.particles = [];
+          game.trail = [];
+          ship.y = canvas.clientHeight / 2;
+          ship.holding = false;
+          ship.direction = 1;
+          panel.classList.add("hidden");
+          requestAnimationFrame(loop);
+        }
+        function die() {
+          if (game.mode !== "run") return;
+          game.mode = "boom";
+          game.boom = 0.75;
+          game.death++;
+          burst(ship.x, ship.y, "#ff1238", 48);
+          if (game.score > game.best) {
+            game.best = game.score;
+            localStorage.setItem("impulso-first-best", String(game.best));
+          }
+          bestEl.textContent = String(game.best).padStart(4, "0");
+          title.textContent = "NAVE DANADA";
+          message.textContent =
+            "Consejo de salud: " + tips[(game.death - 1) % tips.length];
+          start.textContent = "REINTENTAR";
+        }
+        function hit(a, b) {
+          const dx = a.x - b.x,
+            dy = a.y - b.y,
+            r = a.r + b.r;
+          return dx * dx + dy * dy < r * r;
+        }
+        function spawnRock() {
+          const r = 10 + Math.random() * 15;
+          const points = 7 + Math.floor(Math.random() * 5);
+          game.rocks.push({
+            x: canvas.clientWidth + 30,
+            y: top() + r + Math.random() * (bottom() - top() - r * 2),
+            r,
+            points,
+            spin: Math.random() * 6,
+            speed: game.speed * (0.8 + Math.random() * 0.45),
+          });
+        }
+        function spawnGate() {
+          const gap = Math.max(108, 195 - game.distance / 140);
+          const y =
+            top() +
+            35 +
+            Math.random() * Math.max(15, bottom() - top() - gap - 70);
+          game.gates.push({
+            x: canvas.clientWidth + 25,
+            width: 130 + Math.random() * 160,
+            y,
+            gap,
+          });
+        }
+        function gateHit(g) {
+          if (ship.x + ship.r < g.x || ship.x - ship.r > g.x + g.width)
+            return false;
+          const edge = Math.abs(ship.x - (g.x + g.width / 2)) / (g.width / 2);
+          const upper = g.y * (1 - edge);
+          const lower =
+            g.y + g.gap + (canvas.clientHeight - g.y - g.gap) * edge;
+          return ship.y - ship.r < upper || ship.y + ship.r > lower;
+        }
+        function effects(dt) {
+          for (const particle of game.particles) {
+            particle.x += particle.vx * dt;
+            particle.y += particle.vy * dt;
+            particle.vy += 100 * dt;
+            particle.life -= dt;
+          }
+          game.particles = game.particles.filter((p) => p.life > 0);
+          for (const point of game.trail) {
+            point.x -= game.speed * dt;
+            point.life -= dt * 2;
+          }
+          game.trail = game.trail.filter((p) => p.life > 0);
+        }
+        function update(dt) {
+          effects(dt);
+          if (game.mode === "boom") {
+            game.boom -= dt;
+            if (game.boom <= 0) {
+              game.mode = "dead";
+              panel.classList.remove("hidden");
+            }
+            return;
+          }
+          if (game.mode !== "run") return;
+          game.distance += game.speed * dt;
+          game.score = Math.floor(game.distance / 10);
+          game.speed = 270 + Math.min(190, game.distance / 55);
+          ship.direction = ship.holding ? -1 : 1;
+          ship.y +=
+            ship.direction * (245 + Math.min(75, game.distance / 200)) * dt;
+          game.trail.push({ x: ship.x - 12, y: ship.y, life: 1 });
+          if (game.trail.length > 30) game.trail.shift();
+          game.rockTimer -= dt;
+          if (game.rockTimer <= 0) {
+            spawnRock();
+            game.rockTimer =
+              Math.max(0.28, 0.65 - game.distance / 22000) +
+              Math.random() * 0.3;
+          }
+          game.gateTimer -= dt;
+          if (game.gateTimer <= 0) {
+            spawnGate();
+            game.gateTimer =
+              Math.max(0.8, 1.6 - game.distance / 15000) + Math.random() * 0.5;
+          }
+          for (const shot of game.shots) shot.x += 640 * dt;
+          for (const rock of game.rocks) {
+            rock.x -= rock.speed * dt;
+            rock.spin += dt * 4;
+            if (hit({ x: ship.x, y: ship.y, r: ship.r - 3 }, rock)) {
+              die();
+              return;
+            }
+          }
+          for (const gate of game.gates) {
+            gate.x -= game.speed * dt;
+            if (gateHit(gate)) {
+              die();
+              return;
+            }
+          }
+          for (const rock of game.rocks) {
+            if (
+              !rock.dead &&
+              game.shots.some((shot) =>
+                hit({ x: shot.x, y: shot.y, r: 5 }, rock),
+              )
+            ) {
+              rock.dead = true;
+              game.score += 35;
+              burst(rock.x, rock.y, "#d7ff00", 20);
+            }
+          }
+          game.rocks = game.rocks.filter((rock) => !rock.dead && rock.x > -50);
+          game.gates = game.gates.filter((gate) => gate.x + gate.width > -50);
+          game.shots = game.shots.filter(
+            (shot) => shot.x < canvas.clientWidth + 30,
+          );
+          if (ship.y < top() + ship.r) ship.y = top() + ship.r;
+          if (ship.y > bottom() - ship.r) ship.y = bottom() - ship.r;
+          habitEl.textContent =
+            game.distance < 1800
+              ? "Hidratación"
+              : game.distance < 4200
+                ? "Movimiento"
+                : game.distance < 7000
+                  ? "Descanso"
+                  : game.distance < 10000
+                    ? "Alimentación"
+                    : "Bienestar";
+          scoreEl.textContent = String(game.score).padStart(4, "0");
+          speedEl.textContent = Math.round(game.speed);
+          bar.style.width = (game.distance % 12000) / 120 + "%";
+        }
+        function draw() {
+          const w = canvas.clientWidth,
+            h = canvas.clientHeight;
+          ctx.clearRect(0, 0, w, h);
+          ctx.fillStyle = "#041504";
+          ctx.fillRect(0, 0, w, h);
+          ctx.strokeStyle = "rgba(125,255,25,.15)";
+          for (let i = -(game.distance % 72); i < w; i += 72) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, h);
+            ctx.stroke();
+          }
+          ctx.fillStyle = "#7dff19";
+          ctx.fillRect(0, 0, w, 3);
+          ctx.fillRect(0, h - 3, w, 3);
+          for (const gate of game.gates) {
+            const count = Math.max(2, Math.floor(gate.width / 70));
+            const width = gate.width / count;
+            for (let i = 0; i < count; i++) {
+              const x = gate.x + i * width;
+              ctx.fillStyle = "#188d40";
+              ctx.beginPath();
+              ctx.moveTo(x, 0);
+              ctx.lineTo(x + width, 0);
+              ctx.lineTo(x + width / 2, gate.y);
+              ctx.closePath();
+              ctx.fill();
+              ctx.beginPath();
+              ctx.moveTo(x, h);
+              ctx.lineTo(x + width, h);
+              ctx.lineTo(x + width / 2, gate.y + gate.gap);
+              ctx.closePath();
+              ctx.fill();
+            }
+          }
+          for (const rock of game.rocks) {
+            ctx.save();
+            ctx.translate(rock.x, rock.y);
+            ctx.rotate(rock.spin);
+            ctx.fillStyle = "#d7ff00";
+            ctx.beginPath();
+            for (let i = 0; i < rock.points; i++) {
+              const angle = (i * Math.PI * 2) / rock.points;
+              const radius = rock.r * (0.62 + ((i * 19) % 42) / 100);
+              ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+          for (const particle of game.particles) {
+            ctx.globalAlpha = Math.max(0, particle.life);
+            ctx.fillStyle = particle.color;
+            ctx.shadowColor = particle.color;
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(
+              particle.x,
+              particle.y,
+              3 + particle.life * 5,
+              0,
+              Math.PI * 2,
+            );
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+          ctx.globalAlpha = 1;
+          for (const point of game.trail) {
+            ctx.fillStyle = "rgba(255,18,56," + point.life * 0.3 + ")";
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 4 + point.life * 5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          for (const shot of game.shots) {
+            ctx.fillStyle = "#ff5370";
+            ctx.fillRect(shot.x, shot.y - 2, 16, 4);
+          }
+          if (game.mode !== "boom" || Math.floor(game.boom * 20) % 2 === 0) {
+            ctx.save();
+            ctx.translate(ship.x, ship.y);
+            ctx.rotate((ship.direction * Math.PI) / 4);
+            ctx.fillStyle = "#ff1238";
+            ctx.shadowColor = "#ff1238";
+            ctx.shadowBlur = 25;
+            ctx.beginPath();
+            ctx.moveTo(22, 0);
+            ctx.lineTo(-16, -15);
+            ctx.lineTo(-10, 0);
+            ctx.lineTo(-16, 15);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+        function loop(time) {
+          const dt = Math.min((time - game.last) / 1000 || 0, 0.035);
+          game.last = time;
+          update(dt);
+          draw();
+          if (game.mode === "run" || game.mode === "boom")
+            requestAnimationFrame(loop);
+        }
+        function startGame() {
+          if (game.mode === "ready" || game.mode === "dead") reset();
+        }
+        function setUp(event) {
+          event.preventDefault();
+          if (game.mode === "ready" || game.mode === "dead") startGame();
+          if (game.mode === "run") ship.holding = true;
+        }
+        function releaseUp() {
+          ship.holding = false;
+        }
+        start.addEventListener("click", reset);
+        upButton.addEventListener("pointerdown", setUp);
+        ["pointerup", "pointercancel", "pointerleave"].forEach((type) =>
+          upButton.addEventListener(type, releaseUp),
+        );
+        shootButton.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+          if (game.mode === "run")
+            game.shots.push({ x: ship.x + 20, y: ship.y });
+        });
+        window.addEventListener("keydown", (event) => {
+          if (["Space", "ArrowUp", "KeyW"].includes(event.code)) {
+            event.preventDefault();
+            setUp(event);
+          }
+          if (["KeyX", "KeyF", "Enter"].includes(event.code)) {
+            event.preventDefault();
+            if (game.mode === "run")
+              game.shots.push({ x: ship.x + 20, y: ship.y });
+          }
+        });
+        window.addEventListener("keyup", (event) => {
+          if (["Space", "ArrowUp", "KeyW"].includes(event.code)) releaseUp();
+        });
+        window.addEventListener("blur", releaseUp);
+        window.addEventListener("resize", resize);
+        bestEl.textContent = String(game.best).padStart(4, "0");
+        resize();
+      })();
+    </script>
+  </body>
+</html>
