@@ -13,6 +13,14 @@
         --panel: #061706;
         --muted: #65a866;
       }
+      body[data-theme="accessible"] {
+        --neon: #00d9ff;
+        --acid: #ffffff;
+        --red: #ff8c00;
+        --dark: #07111f;
+        --panel: #10243a;
+        --muted: #b9c9dc;
+      }
       * {
         box-sizing: border-box;
       }
@@ -35,6 +43,22 @@
         justify-content: space-between;
         align-items: center;
         letter-spacing: 2px;
+      }
+      .theme-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 9px;
+        letter-spacing: 1px;
+      }
+      .theme-control select {
+        border: 1px solid var(--neon);
+        background: var(--panel);
+        color: var(--acid);
+        padding: 6px 8px;
+        font: inherit;
+        cursor: pointer;
       }
       .brand {
         font-weight: bold;
@@ -88,6 +112,90 @@
       }
       .hud strong {
         color: var(--acid);
+      }
+      .charge-meter {
+        position: absolute;
+        right: 12px;
+        bottom: 16px;
+        width: 18px;
+        height: 116px;
+        border: 1px solid rgba(125, 255, 25, 0.65);
+        background: rgba(3, 16, 3, 0.8);
+        z-index: 5;
+        box-shadow: inset 0 0 12px rgba(125, 255, 25, 0.18);
+      }
+      .charge-meter.ready {
+        border-color: var(--red);
+        box-shadow: 0 0 18px rgba(255, 18, 56, 0.4);
+      }
+      .charge-fill {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 0%;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 18, 56, 0.9) 0%,
+          rgba(125, 255, 25, 0.9) 100%
+        );
+        box-shadow: 0 0 14px rgba(125, 255, 25, 0.45);
+      }
+      .charge-meter.ready .charge-fill {
+        background: #32ff64;
+        box-shadow: 0 0 18px rgba(50, 255, 100, 0.9);
+      }
+      .shield-indicator {
+        --shield-progress: 100%;
+        position: absolute;
+        right: 48px;
+        bottom: 14px;
+        z-index: 5;
+        width: 64px;
+        height: 74px;
+        padding: 13px 4px 9px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 3px;
+        clip-path: polygon(50% 0, 94% 15%, 86% 70%, 50% 100%, 14% 70%, 6% 15%);
+        background: linear-gradient(
+          to top,
+          var(--neon) 0,
+          var(--neon) var(--shield-progress),
+          color-mix(in srgb, var(--panel) 88%, var(--neon)) var(--shield-progress),
+          color-mix(in srgb, var(--panel) 88%, var(--neon)) 100%
+        );
+        color: var(--acid);
+        text-align: center;
+        filter: drop-shadow(0 0 8px var(--neon));
+      }
+      .shield-indicator::after {
+        content: "";
+        position: absolute;
+        inset: 3px;
+        z-index: -1;
+        clip-path: inherit;
+        background: var(--panel);
+      }
+      .shield-indicator span {
+        font-size: 7px;
+        letter-spacing: 0.5px;
+      }
+      .shield-indicator strong {
+        font-size: 8px;
+      }
+      .shield-indicator.active {
+        --shield-progress: 100%;
+        background: linear-gradient(to top, var(--neon), var(--acid));
+        color: var(--dark);
+      }
+      .shield-indicator.warning {
+        --shield-progress: 100%;
+        background: #ff1238;
+        color: #fff;
+        filter: drop-shadow(0 0 12px #ff1238);
       }
       .stage {
         height: min(55vw, 500px);
@@ -146,6 +254,18 @@
         background: var(--red);
         color: #fff;
       }
+      body[data-theme="accessible"] .charge-meter {
+        border-style: dashed;
+      }
+      body[data-theme="accessible"] .charge-fill {
+        background: repeating-linear-gradient(
+          135deg,
+          #ff8c00 0,
+          #ff8c00 8px,
+          #ffffff 8px,
+          #ffffff 12px
+        );
+      }
       .panel small {
         color: var(--muted);
         margin-top: 15px;
@@ -153,7 +273,7 @@
       .controls {
         position: absolute;
         z-index: 4;
-        right: 12px;
+        left: 12px;
         bottom: 12px;
         display: flex;
         gap: 8px;
@@ -213,7 +333,13 @@
     <main class="app">
       <header>
         <div class="brand"><b>◆</b> IMPULSO SALUDABLE</div>
-        <div class="muted">PRIMERA VERSION // WAVE MONITOR</div>
+        <div class="theme-control">
+          <label for="themeSelect">TEMA</label>
+          <select id="themeSelect" aria-label="Seleccionar tema visual">
+            <option value="original">Original</option>
+            <option value="accessible">Alto contraste</option>
+          </select>
+        </div>
       </header>
       <section class="intro">
         <div>
@@ -230,18 +356,24 @@
           <div>RECORD <strong id="best">0000</strong></div>
         </div>
         <div class="stage">
+          <div class="charge-meter" id="chargeMeter">
+            <div class="charge-fill" id="chargeFill"></div>
+          </div>
           <canvas id="game"></canvas>
           <div class="panel" id="panel">
             <div>SENAL ESTABLE // NAVE ROJA</div>
             <h2 id="title">¿LISTO?</h2>
             <p id="message">
-              Mantén el botón de subida para volar. Suéltalo para bajar. Dispara
-              a los asteroides.
+              Pulsa espacio para cambiar la dirección. Destruye meteoros para
+              cargar el arma y usa el escudo con E.
             </p>
             <button id="start">COMENZAR</button
             ><small
-              >SUBIR: MANTENER ESPACIO / W / ↑ · DISPARAR: X / F / ENTER</small
+              >DIRECCIÓN: ESPACIO · DISPARAR: ENTER · CARGA: { · ESCUDO: E</small
             >
+          </div>
+          <div class="shield-indicator" id="shieldIndicator">
+            <span>ESCUDO</span><strong id="shieldStatus">READY</strong>
           </div>
           <div class="controls">
             <button id="up">▲ MANTENER</button
@@ -266,10 +398,47 @@
           scoreEl = document.querySelector("#score"),
           habitEl = document.querySelector("#habit"),
           speedEl = document.querySelector("#speed"),
+          shieldStatusEl = document.querySelector("#shieldStatus"),
           bestEl = document.querySelector("#best"),
           bar = document.querySelector("#bar"),
+          chargeMeter = document.querySelector("#chargeMeter"),
+          chargeFill = document.querySelector("#chargeFill"),
           title = document.querySelector("#title"),
-          message = document.querySelector("#message");
+          message = document.querySelector("#message"),
+          themeSelect = document.querySelector("#themeSelect"),
+          shieldIndicator = document.querySelector("#shieldIndicator");
+        const themeColors = {
+          original: {
+            background: "#041504",
+            grid: "rgba(125,255,25,.15)",
+            edge: "#7dff19",
+            gate: "#188d40",
+            rock: "#d7ff00",
+            ship: "#ff1d3a",
+            shot: "#ff5370",
+            charged: "rgba(255,18,56,0.9)",
+            shield: "rgba(125,255,25,0.9)",
+          },
+          accessible: {
+            background: "#07111f",
+            grid: "rgba(0,217,255,.24)",
+            edge: "#00d9ff",
+            gate: "#4267b2",
+            rock: "#ffffff",
+            ship: "#ff8c00",
+            shot: "#ffffff",
+            charged: "rgba(255,140,0,0.95)",
+            shield: "rgba(0,217,255,0.95)",
+          },
+        };
+        let activeTheme = "original";
+        function applyTheme(theme) {
+          activeTheme = theme === "accessible" ? "accessible" : "original";
+          document.body.dataset.theme = activeTheme;
+          themeSelect.value = activeTheme;
+          localStorage.setItem("impulso-theme", activeTheme);
+          draw();
+        }
         const ship = { x: 145, y: 0, r: 15, holding: false, direction: 1 };
         const game = {
           mode: "ready",
@@ -284,9 +453,18 @@
           shots: [],
           particles: [],
           trail: [],
+          powerUps: [],
           best: Number(localStorage.getItem("impulso-first-best") || 0),
           death: 0,
           boom: 0.7,
+          charge: 0,
+          chargeReady: false,
+          shieldCooldown: 0,
+          shieldTimer: 0,
+          shieldActive: false,
+          tripleShotTimer: 0,
+          tripleShotShotsLeft: 0,
+          powerUpTimer: 4,
         };
         const tips = [
           "Toma agua durante el día, especialmente durante la actividad física.",
@@ -331,6 +509,15 @@
           game.shots = [];
           game.particles = [];
           game.trail = [];
+          game.powerUps = [];
+          game.charge = 0;
+          game.chargeReady = false;
+          game.shieldCooldown = 0;
+          game.shieldTimer = 0;
+          game.shieldActive = false;
+          game.tripleShotTimer = 0;
+          game.tripleShotShotsLeft = 0;
+          game.powerUpTimer = 4;
           ship.y = canvas.clientHeight / 2;
           ship.holding = false;
           ship.direction = 1;
@@ -393,6 +580,56 @@
             g.y + g.gap + (canvas.clientHeight - g.y - g.gap) * edge;
           return ship.y - ship.r < upper || ship.y + ship.r > lower;
         }
+        function spawnPowerUp() {
+          game.powerUps.push({
+            x: canvas.clientWidth + 25,
+            y: top() + 30 + Math.random() * (bottom() - top() - 60),
+            r: 12,
+            type: "triple",
+          });
+        }
+        function fireMainShot() {
+          if (game.tripleShotTimer > 0 && game.tripleShotShotsLeft <= 0) {
+            game.tripleShotTimer = 0;
+          }
+          const offsets = game.tripleShotTimer > 0 ? [-10, 0, 10] : [0];
+          offsets.forEach((offset) => {
+            if (game.tripleShotTimer > 0 && game.tripleShotShotsLeft <= 0) return;
+            game.shots.push({
+              x: ship.x + 20,
+              y: ship.y + offset,
+              type: "normal",
+              life: 1,
+            });
+            if (game.tripleShotTimer > 0) {
+              game.tripleShotShotsLeft -= 1;
+            }
+          });
+        }
+        function activateShield() {
+          if (game.mode !== "run" || game.shieldCooldown > 0) return;
+          game.shieldActive = true;
+          game.shieldTimer = 3;
+          game.shieldCooldown = 15;
+          burst(ship.x, ship.y, "#7dff19", 26);
+        }
+        function fireChargedShot() {
+          if (game.mode !== "run" || !game.chargeReady) return;
+          game.charge = 0;
+          game.chargeReady = false;
+          const fieldWidth = canvas.clientWidth || 900;
+          const fieldHeight = canvas.clientHeight || 500;
+          const maxRadius = Math.max(fieldWidth, fieldHeight) * 0.9;
+          game.shots.push({
+            x: ship.x + 20,
+            y: ship.y,
+            type: "charged",
+            life: 0.8,
+            radius: 18,
+            maxRadius,
+          });
+          burst(ship.x + 22, ship.y, "#ff1238", 26);
+        }
         function effects(dt) {
           for (const particle of game.particles) {
             particle.x += particle.vx * dt;
@@ -406,6 +643,47 @@
             point.life -= dt * 2;
           }
           game.trail = game.trail.filter((p) => p.life > 0);
+          for (const power of game.powerUps) {
+            power.x -= (game.speed + 35) * dt;
+          }
+          game.powerUps = game.powerUps.filter((power) => power.x > -40);
+          if (game.shieldCooldown > 0) game.shieldCooldown = Math.max(0, game.shieldCooldown - dt);
+          if (game.shieldActive) {
+            game.shieldTimer -= dt;
+            if (game.shieldTimer <= 0) game.shieldActive = false;
+          }
+          if (game.tripleShotTimer > 0) {
+            game.tripleShotTimer = Math.max(0, game.tripleShotTimer - dt);
+            if (game.tripleShotTimer === 0) {
+              game.tripleShotShotsLeft = 0;
+            }
+          }
+          const shieldProgress = game.shieldActive
+            ? 100
+            : game.shieldCooldown > 0
+              ? ((15 - game.shieldCooldown) / 15) * 100
+              : 100;
+          const shieldWarning = game.shieldActive && game.shieldTimer <= 1;
+          shieldIndicator.style.setProperty(
+            "--shield-progress",
+            Math.max(0, Math.min(100, shieldProgress)) + "%",
+          );
+          shieldIndicator.classList.toggle("active", game.shieldActive);
+          shieldIndicator.classList.toggle("warning", shieldWarning);
+          if (game.chargeReady) {
+            chargeMeter.classList.add("ready");
+          } else {
+            chargeMeter.classList.remove("ready");
+          }
+          const chargePercent = (game.charge / 15) * 100;
+          chargeFill.style.height = Math.min(100, chargePercent) + "%";
+          if (game.shieldCooldown > 0) {
+            shieldStatusEl.textContent = "COOL " + game.shieldCooldown.toFixed(1) + "s";
+          } else if (game.shieldActive) {
+            shieldStatusEl.textContent = "ACTIVO";
+          } else {
+            shieldStatusEl.textContent = "READY";
+          }
         }
         function update(dt) {
           effects(dt);
@@ -421,7 +699,6 @@
           game.distance += game.speed * dt;
           game.score = Math.floor(game.distance / 10);
           game.speed = 270 + Math.min(190, game.distance / 55);
-          ship.direction = ship.holding ? -1 : 1;
           ship.y +=
             ship.direction * (245 + Math.min(75, game.distance / 200)) * dt;
           game.trail.push({ x: ship.x - 12, y: ship.y, life: 1 });
@@ -439,39 +716,95 @@
             game.gateTimer =
               Math.max(0.8, 1.6 - game.distance / 15000) + Math.random() * 0.5;
           }
-          for (const shot of game.shots) shot.x += 640 * dt;
+          game.powerUpTimer -= dt;
+          if (game.powerUpTimer <= 0) {
+            spawnPowerUp();
+            game.powerUpTimer = 7 + Math.random() * 4;
+          }
+          for (const shot of game.shots) {
+            if (shot.type === "charged") {
+              shot.life -= dt;
+              shot.radius = Math.min(
+                shot.maxRadius,
+                shot.radius + (shot.maxRadius / 0.8) * dt,
+              );
+            } else {
+              shot.x += 640 * dt;
+            }
+          }
           for (const rock of game.rocks) {
             rock.x -= rock.speed * dt;
             rock.spin += dt * 4;
             if (hit({ x: ship.x, y: ship.y, r: ship.r - 3 }, rock)) {
-              die();
-              return;
+              if (game.shieldActive) {
+                rock.dead = true;
+                burst(rock.x, rock.y, "#7dff19", 18);
+              } else {
+                die();
+                return;
+              }
             }
           }
           for (const gate of game.gates) {
             gate.x -= game.speed * dt;
             if (gateHit(gate)) {
-              die();
-              return;
+              if (game.shieldActive) {
+                burst(ship.x, ship.y, "#7dff19", 22);
+              } else {
+                die();
+                return;
+              }
+            }
+          }
+          for (const power of game.powerUps) {
+            if (hit({ x: ship.x, y: ship.y, r: ship.r + 8 }, power)) {
+              power.collected = true;
+              game.tripleShotTimer = 8;
+              game.tripleShotShotsLeft = 20;
+              burst(power.x, power.y, "#FF0000", 24);
             }
           }
           for (const rock of game.rocks) {
-            if (
-              !rock.dead &&
-              game.shots.some((shot) =>
-                hit({ x: shot.x, y: shot.y, r: 5 }, rock),
-              )
-            ) {
-              rock.dead = true;
-              game.score += 35;
-              burst(rock.x, rock.y, "#d7ff00", 20);
+            if (!rock.dead) {
+              const validShots = game.shots.filter((shot) =>
+                hit({ x: shot.x, y: shot.y, r: shot.type === "charged" ? shot.radius : 5 }, rock),
+              );
+              if (validShots.length) {
+                rock.dead = true;
+                game.score += 35;
+                game.charge = Math.min(15, game.charge + 1);
+                game.chargeReady = game.charge >= 15;
+                if (game.chargeReady) {
+                  burst(rock.x, rock.y, "#ff1238", 28);
+                } else {
+                  burst(rock.x, rock.y, "#d7ff00", 20);
+                }
+                if (validShots[0].type === "charged") {
+                  burst(rock.x, rock.y, "#ff1238", 34);
+                  game.score += 40;
+                  for (const other of game.rocks) {
+                    if (!other.dead && other !== rock) {
+                      const dx = other.x - validShots[0].x;
+                      const dy = other.y - validShots[0].y;
+                      const dist = Math.hypot(dx, dy);
+                      if (dist < validShots[0].radius) {
+                        other.dead = true;
+                        game.score += 20;
+                        burst(other.x, other.y, "#ff1238", 22);
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
           game.rocks = game.rocks.filter((rock) => !rock.dead && rock.x > -50);
           game.gates = game.gates.filter((gate) => gate.x + gate.width > -50);
-          game.shots = game.shots.filter(
-            (shot) => shot.x < canvas.clientWidth + 30,
-          );
+          game.powerUps = game.powerUps.filter((power) => !power.collected);
+          game.shots = game.shots.filter((shot) => {
+            if (shot.type === "charged") return shot.life > 0;
+            return shot.x < canvas.clientWidth + 30;
+          });
           if (ship.y < top() + ship.r) ship.y = top() + ship.r;
           if (ship.y > bottom() - ship.r) ship.y = bottom() - ship.r;
           habitEl.textContent =
@@ -490,18 +823,19 @@
         }
         function draw() {
           const w = canvas.clientWidth,
-            h = canvas.clientHeight;
+            h = canvas.clientHeight,
+            colors = themeColors[activeTheme];
           ctx.clearRect(0, 0, w, h);
-          ctx.fillStyle = "#041504";
+          ctx.fillStyle = colors.background;
           ctx.fillRect(0, 0, w, h);
-          ctx.strokeStyle = "rgba(125,255,25,.15)";
+          ctx.strokeStyle = colors.grid;
           for (let i = -(game.distance % 72); i < w; i += 72) {
             ctx.beginPath();
             ctx.moveTo(i, 0);
             ctx.lineTo(i, h);
             ctx.stroke();
           }
-          ctx.fillStyle = "#7dff19";
+          ctx.fillStyle = colors.edge;
           ctx.fillRect(0, 0, w, 3);
           ctx.fillRect(0, h - 3, w, 3);
           for (const gate of game.gates) {
@@ -509,7 +843,7 @@
             const width = gate.width / count;
             for (let i = 0; i < count; i++) {
               const x = gate.x + i * width;
-              ctx.fillStyle = "#188d40";
+              ctx.fillStyle = colors.gate;
               ctx.beginPath();
               ctx.moveTo(x, 0);
               ctx.lineTo(x + width, 0);
@@ -528,7 +862,7 @@
             ctx.save();
             ctx.translate(rock.x, rock.y);
             ctx.rotate(rock.spin);
-            ctx.fillStyle = "#d7ff00";
+            ctx.fillStyle = colors.rock;
             ctx.beginPath();
             for (let i = 0; i < rock.points; i++) {
               const angle = (i * Math.PI * 2) / rock.points;
@@ -557,27 +891,107 @@
           }
           ctx.globalAlpha = 1;
           for (const point of game.trail) {
-            ctx.fillStyle = "rgba(255,18,56," + point.life * 0.3 + ")";
+            const alpha = Math.max(0.1, point.life * 0.7);
+            ctx.fillStyle = "rgba(255, 40, 60, " + alpha + ")";
             ctx.beginPath();
-            ctx.arc(point.x, point.y, 4 + point.life * 5, 0, Math.PI * 2);
+            ctx.arc(point.x, point.y, 5 + point.life * 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "rgba(255, 204, 0, " + alpha * 0.7 + ")";
+            ctx.beginPath();
+            ctx.arc(point.x + 3, point.y, 2.4 + point.life * 4, 0, Math.PI * 2);
             ctx.fill();
           }
-          for (const shot of game.shots) {
-            ctx.fillStyle = "#ff5370";
-            ctx.fillRect(shot.x, shot.y - 2, 16, 4);
+          for (const power of game.powerUps) {
+            ctx.save();
+            ctx.translate(power.x, power.y);
+            ctx.rotate(game.distance / 180);
+            ctx.fillStyle = "rgba(120, 230, 255, 0.22)";
+            ctx.strokeStyle = "#8ef7ff";
+            ctx.shadowColor = "#8ef7ff";
+            ctx.shadowBlur = 18;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, power.r + 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+            ctx.beginPath();
+            ctx.arc(-4, -5, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#ffd166";
+            const shotOffsets = [
+              { x: -6, y: 0 },
+              { x: 0, y: -7 },
+              { x: 6, y: 0 },
+            ];
+            shotOffsets.forEach(({ x, y }) => {
+              ctx.save();
+              ctx.translate(x, y);
+              ctx.rotate(Math.PI / 2);
+              ctx.beginPath();
+              ctx.moveTo(0, -5);
+              ctx.lineTo(4, 0);
+              ctx.lineTo(0, 5);
+              ctx.lineTo(-4, 0);
+              ctx.closePath();
+              ctx.fill();
+              ctx.restore();
+            });
+            ctx.restore();
           }
-          if (game.mode !== "boom" || Math.floor(game.boom * 20) % 2 === 0) {
+          for (const shot of game.shots) {
+            if (shot.type === "charged") {
+              ctx.beginPath();
+              ctx.strokeStyle = colors.charged.replace("0.9", Math.max(0.15, shot.life * 1.3));
+              ctx.lineWidth = 4;
+              ctx.shadowColor = colors.charged;
+              ctx.shadowBlur = 22;
+              ctx.arc(shot.x, shot.y, shot.radius, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.shadowBlur = 0;
+            } else {
+              ctx.fillStyle = colors.shot;
+              ctx.fillRect(shot.x, shot.y - 2, 16, 4);
+            }
+          }
+          const shieldWarning = game.shieldActive && game.shieldTimer <= 1;
+          const shieldVisible =
+            !shieldWarning || Math.floor(game.shieldTimer * 10) % 2 === 0;
+          if (game.shieldActive && shieldVisible) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(ship.x, ship.y, ship.r + 16, 0, Math.PI * 2);
+            ctx.strokeStyle = colors.shield;
+            ctx.lineWidth = 3;
+            ctx.shadowColor = colors.edge;
+            ctx.shadowBlur = 18;
+            ctx.stroke();
+            ctx.restore();
+          }
+          if (
+            (game.mode !== "boom" || Math.floor(game.boom * 20) % 2 === 0) &&
+            shieldVisible
+          ) {
             ctx.save();
             ctx.translate(ship.x, ship.y);
             ctx.rotate((ship.direction * Math.PI) / 4);
-            ctx.fillStyle = "#ff1238";
-            ctx.shadowColor = "#ff1238";
-            ctx.shadowBlur = 25;
+            ctx.fillStyle = colors.ship;
+            ctx.shadowColor = colors.ship;
+            ctx.shadowBlur = 30;
             ctx.beginPath();
-            ctx.moveTo(22, 0);
-            ctx.lineTo(-16, -15);
-            ctx.lineTo(-10, 0);
-            ctx.lineTo(-16, 15);
+            ctx.moveTo(24, 0);
+            ctx.lineTo(-16, -16);
+            ctx.lineTo(-8, 0);
+            ctx.lineTo(-16, 16);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = "#ffd1d8";
+            ctx.beginPath();
+            ctx.moveTo(8, 0);
+            ctx.lineTo(-2, -5);
+            ctx.lineTo(-2, 5);
             ctx.closePath();
             ctx.fill();
             ctx.restore();
@@ -591,16 +1005,24 @@
           if (game.mode === "run" || game.mode === "boom")
             requestAnimationFrame(loop);
         }
+        function handleShieldInput() {
+          if (game.mode !== "run") return;
+          if (game.shieldCooldown <= 0) activateShield();
+        }
         function startGame() {
           if (game.mode === "ready" || game.mode === "dead") reset();
         }
         function setUp(event) {
           event.preventDefault();
           if (game.mode === "ready" || game.mode === "dead") startGame();
-          if (game.mode === "run") ship.holding = true;
+          if (game.mode === "run") {
+            ship.holding = true;
+            ship.direction = -1;
+          }
         }
         function releaseUp() {
           ship.holding = false;
+          if (game.mode === "run") ship.direction = 1;
         }
         start.addEventListener("click", reset);
         upButton.addEventListener("pointerdown", setUp);
@@ -609,26 +1031,38 @@
         );
         shootButton.addEventListener("pointerdown", (event) => {
           event.preventDefault();
-          if (game.mode === "run")
-            game.shots.push({ x: ship.x + 20, y: ship.y });
+          if (game.mode === "run") fireMainShot();
         });
         window.addEventListener("keydown", (event) => {
-          if (["Space", "ArrowUp", "KeyW"].includes(event.code)) {
+          if (event.code === "Space") {
             event.preventDefault();
             setUp(event);
           }
-          if (["KeyX", "KeyF", "Enter"].includes(event.code)) {
+          if (event.key === "{") {
             event.preventDefault();
-            if (game.mode === "run")
-              game.shots.push({ x: ship.x + 20, y: ship.y });
+            fireChargedShot();
+          }
+          if (event.code === "KeyE") {
+            event.preventDefault();
+            handleShieldInput();
+          }
+          if (event.code === "Enter") {
+            event.preventDefault();
+            if (game.mode === "run") fireMainShot();
           }
         });
         window.addEventListener("keyup", (event) => {
-          if (["Space", "ArrowUp", "KeyW"].includes(event.code)) releaseUp();
+          if (event.code === "Space") releaseUp();
         });
         window.addEventListener("blur", releaseUp);
         window.addEventListener("resize", resize);
+        themeSelect.addEventListener("change", (event) => {
+          applyTheme(event.target.value);
+        });
         bestEl.textContent = String(game.best).padStart(4, "0");
+        chargeMeter.classList.remove("ready");
+        chargeFill.style.height = "0%";
+        applyTheme(localStorage.getItem("impulso-theme") || "original");
         resize();
       })();
     </script>
